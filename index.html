@@ -10,7 +10,7 @@
   --ink:#2a2a2a; --gold:#d4af37;
   --btn:#e01919; --frame:#ffffff;
   --shadow:0 18px 60px rgba(0,0,0,.18);
-  --slide-out:150px; /* cuánto asoma antes de acoplar */
+  --slide-out:150px; /* cuánto “asoma” antes de acoplar */
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
@@ -63,23 +63,25 @@ body{
 }
 .slot.releasing{ overflow:visible; } /* durante el slide, no recorta */
 
-/* Tira (dentro de la ranura, centrada) */
+/* Tira (anclada al borde superior de la ranura) */
 .strip{
-  position:absolute;left:50%;bottom:0;transform:translate(-50%,100%);
-  width:min(400px,78vw); /* un pelín más estrecha que la ranura */
+  position:absolute;left:50%;top:0;transform:translate(-50%,-100%); /* empieza arriba (oculta) */
+  width:min(400px,78vw);
   background:var(--frame);border-radius:8px;
   padding:18px 14px;box-shadow:var(--shadow);
   opacity:0;pointer-events:none;z-index:20;
 }
+
+/* Animación: de -100% (dentro de la máquina) a +var(--slide-out) (sale hacia abajo) */
 @keyframes slideOut{
-  0%{transform:translate(-50%,100%);opacity:1;}
+  0%{transform:translate(-50%,-100%);opacity:1;}
   100%{transform:translate(-50%,var(--slide-out));opacity:1;}
 }
 .strip.is-sliding{animation:slideOut 2.2s cubic-bezier(.22,.82,.27,1) forwards}
 
-/* Tira acoplada (flujo normal, centrada y página hace scroll) */
+/* Tira acoplada: flujo normal, centrada, scroll de la página */
 .strip.is-docked{
-  position:relative; left:auto; bottom:auto; transform:none; opacity:1; pointer-events:auto;
+  position:relative; left:auto; top:auto; transform:none; opacity:1; pointer-events:auto;
   width:min(760px,96vw);
   margin: calc(var(--slide-out) + 8px) auto 0; /* centrada con auto */
 }
@@ -133,7 +135,7 @@ body{
     </div>
   </section>
 
-  <!-- la tira quedará aquí (flujo normal) tras el slide -->
+  <!-- La tira quedará aquí (flujo normal) tras el slide -->
   <div id="dock"></div>
 
   <p class="footer">Jorge & Lidia — 26·09·2026</p>
@@ -150,32 +152,30 @@ document.addEventListener('DOMContentLoaded',()=>{
   btn.addEventListener('click',()=>{
     if(started) return; started=true;
 
-    // Deja ver fuera de la ranura durante el slide
+    // Ver la tira fuera de la ranura mientras anima
     slot.classList.add('releasing');
 
-    // Asegura que la animación arranca (reflow)
+    // Asegurar que la animación arranca
     strip.style.opacity='1';
-    void strip.offsetWidth;           // <-- fuerza reflow
+    void strip.offsetWidth;            // reflow para reiniciar animación
     strip.classList.add('is-sliding');
 
-    // Cuando acaba el slide: acoplar debajo y centrar
     strip.addEventListener('animationend',()=>{
-      if(docked) return;
-      docked=true;
+      if(docked) return; docked=true;
 
-      slot.classList.remove('releasing'); // ya no hace falta
+      // Termina: deja de “liberar” la ranura
+      slot.classList.remove('releasing');
+
+      // Pasa a flujo normal y céntrala
       strip.classList.remove('is-sliding');
       strip.classList.add('is-docked');
-
-      // Mover al flujo normal, justo debajo del photobooth
       dock.insertAdjacentElement('afterbegin', strip);
-
-      // Alinear centrado y en el punto correcto
       strip.style.marginLeft='auto';
       strip.style.marginRight='auto';
 
-      // Scroll hasta el inicio de la tira (opcional)
-      window.scrollTo({ top: slot.getBoundingClientRect().top + window.scrollY, behavior: 'smooth' });
+      // Scroll suave al inicio de la tira (opcional)
+      const y = slot.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({ top: y, behavior: 'smooth' });
     }, { once:true });
   });
 });
