@@ -1,119 +1,55 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Vintage Photobooth Wedding Invitation</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Photobooth Invite</title>
 <style>
-  :root{
-    --bg1:#ffffff;
-    --bg2:#f6f6f6;
-    --ink:#2a2a2a;
-    --gold:#d4af37;
-    --btn:#e01919;
-    --frame:#ffffff;
-    --shadow: 0 18px 60px rgba(0,0,0,.18);
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; font-family:"Georgia",serif; color:var(--ink);
-    background:linear-gradient(to bottom,var(--bg1),var(--bg2));
-    overflow-x:hidden;
-  }
-  .wrap{
-    min-height:100svh; display:flex; flex-direction:column; align-items:center;
-    justify-content:flex-start; padding:clamp(16px,3vw,32px); gap:clamp(16px,3vw,28px);
-  }
-  /* Photobooth */
-  .photobooth{
-    width:min(560px,92vw);
-    background:linear-gradient(135deg,#ececec,#d2d2d2);
-    border-radius:22px 22px 12px 12px; padding:24px 22px 18px; position:relative;
-    box-shadow:var(--shadow);
-  }
-  .photobooth::before{
-    content:""; position:absolute; top:10px; left:50%; transform:translateX(-50%);
-    width:68px; height:10px; border-radius:6px; background:#a9a9a9;
-  }
-  .screen{background:#121212; border-radius:12px; padding:24px 18px; text-align:center;
-    box-shadow:inset 0 6px 18px rgba(0,0,0,.55);}
-  .t1{color:var(--gold); letter-spacing:.2em; text-transform:uppercase;
-    font-size:clamp(12px,1.6vw,14px); margin:0 0 6px;}
-  .t2{color:#9a9a9a; font:500 12px/1.2 "Arial",sans-serif; margin:0;}
-  .button-zone{display:flex; justify-content:center; padding:16px 0 12px;}
-  .red-btn{
-    width:104px; height:104px; border-radius:50%;
-    background:radial-gradient(circle at 30% 30%,#ff5151,var(--btn));
-    border:6px solid #1f1f1f; cursor:pointer;
-    box-shadow:0 10px 26px rgba(224,25,25,.45), inset 0 -6px 12px rgba(0,0,0,.35);
-    transition:transform .15s ease, box-shadow .15s ease; position:relative;
-  }
+  :root{ --ink:#2a2a2a; --gold:#d4af37; --btn:#e01919; --frame:#fff; }
+  *{box-sizing:border-box} html,body{height:100%}
+  body{margin:0;font-family:Georgia,serif;color:var(--ink);background:linear-gradient(#fff,#f6f6f6)}
+  .wrap{min-height:100svh;display:flex;flex-direction:column;align-items:center;gap:24px;padding:24px}
+  .photobooth{width:min(560px,92vw);background:linear-gradient(135deg,#ececec,#d2d2d2);border-radius:22px 22px 12px 12px;padding:24px 22px 18px;position:relative;box-shadow:0 18px 60px rgba(0,0,0,.18)}
+  .photobooth::before{content:"";position:absolute;top:10px;left:50%;transform:translateX(-50%);width:68px;height:10px;border-radius:6px;background:#a9a9a9}
+  .screen{background:#121212;border-radius:12px;padding:24px 18px;text-align:center;box-shadow:inset 0 6px 18px rgba(0,0,0,.55)}
+  .t1{color:var(--gold);letter-spacing:.2em;text-transform:uppercase;margin:0 0 6px}
+  .t2{color:#9a9a9a;font:500 12px/1.2 Arial,sans-serif;margin:0}
+  .button-zone{display:flex;justify-content:center;padding:16px 0 12px}
+  .red-btn{position:relative;z-index:10;width:104px;height:104px;border-radius:50%;
+    background:radial-gradient(circle at 30% 30%,#ff5151,var(--btn));border:6px solid #1f1f1f;cursor:pointer;
+    box-shadow:0 10px 26px rgba(224,25,25,.45),inset 0 -6px 12px rgba(0,0,0,.35);transition:transform .15s}
   .red-btn:hover{transform:translateY(-2px)} .red-btn:active{transform:translateY(2px)}
-  .red-btn::after{content:"PRESS"; position:absolute; left:50%; transform:translateX(-50%);
-    margin-top:116px; font:600 11px/1 "Arial",sans-serif; letter-spacing:.22em; color:#6d6d6d;}
-  .slot{
-    width:min(420px,80%); height:22px; margin:0 auto; background:#121212;
-    border-radius:0 0 12px 12px; box-shadow:inset 0 4px 10px rgba(0,0,0,.65);
-    position:relative; overflow:hidden;
-  }
-  /* Tira de fotos */
-  .strip{
-    position:absolute; left:50%; transform:translate(-50%,-100%); /* oculta arriba */
-    width:min(380px,72vw); background:var(--frame); border-radius:8px; padding:18px 14px;
-    box-shadow:var(--shadow); opacity:0; transition:opacity .4s ease;
-    z-index:2; /* sobre la máquina */
-  }
-  @keyframes slideOut{
-    0%{transform:translate(-50%,-100%);} 100%{transform:translate(-50%,8px);}
-  }
-  @keyframes growToFull{
-    0%{transform-origin:top center; transform:translate(-50%, 8px) scale(1);}
-    100%{transform-origin:top center; transform:translate(-50%,0) scale(1);}
-  }
-  .strip.is-sliding{opacity:1; animation:slideOut 2.2s cubic-bezier(.22,.82,.27,1) forwards;}
-  .strip.is-expanding{
-    position:fixed; top:0; left:50%; transform:translateX(-50%);
-    width:min(760px,96vw); max-height:100svh; overflow:auto; border-radius:10px;
-    animation:growToFull 1.1s ease-out forwards;
-    scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch; background:var(--frame);
-  }
-  .frame{
-    background:var(--frame); border:12px solid var(--frame); border-radius:10px;
-    margin:14px 10px 18px; box-shadow:0 6px 24px rgba(0,0,0,.12); scroll-snap-align:start;
-  }
-  .content{
-    min-height: clamp(240px, 72svh, 760px);
-    padding: clamp(18px, 4vw, 34px);
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    text-align:center; background:linear-gradient(135deg,#fafafa,#f0f0f0);
-    transform:translateZ(0); will-change:transform,opacity;
-  }
-  .num{font:600 12px/1 "Arial",sans-serif; letter-spacing:.32em; color:var(--gold); margin-bottom:12px;}
-  .ttl{font-size:clamp(26px,4.2vw,40px); margin:0 0 6px; color:var(--ink);}
-  .amp{font:500 16px/1 "Arial",sans-serif; color:#777; margin:6px 0 10px;}
-  .sub{font:400 15px/1.5 "Arial",sans-serif; color:#666; max-width:38ch;}
-  .divider{width:64px; height:2px; background:var(--gold); margin:12px auto 10px;}
-  .event{margin:10px 0;}
-  .label{font:700 11px/1 "Arial",sans-serif; text-transform:uppercase; letter-spacing:.24em; color:var(--gold); margin-bottom:6px;}
-  .detail{font:400 16px/1.5 "Arial",sans-serif; color:#555;}
-  .footer{margin:10px 0 0; text-align:center; color:#9a9a9a; font:600 12px/1 "Arial",sans-serif; letter-spacing:.22em;}
-  @media (prefers-reduced-motion: reduce){
-    .strip{transition:none; animation:none !important; opacity:1}
-    .strip.is-sliding{transform:translate(-50%,8px) !important}
-    .strip.is-expanding{animation:none !important}
-  }
-  @media (max-width:600px){
-    .photobooth{padding:18px 14px 14px}
-    .red-btn{width:86px; height:86px}
-    .slot{height:20px}
-    .frame{border-width:10px}
-  }
+  .red-btn::after{content:"PRESS";position:absolute;left:50%;transform:translateX(-50%);margin-top:116px;
+    font:600 11px/1 Arial,sans-serif;letter-spacing:.22em;color:#6d6d6d}
+  .slot{width:min(420px,80%);height:22px;margin:0 auto;background:#121212;border-radius:0 0 12px 12px;
+    box-shadow:inset 0 4px 10px rgba(0,0,0,.65);position:relative;overflow:hidden}
+  .strip{position:absolute;left:50%;transform:translate(-50%,-100%);width:min(380px,72vw);background:var(--frame);
+    border-radius:8px;padding:18px 14px;box-shadow:0 18px 60px rgba(0,0,0,.18);opacity:0;transition:opacity .3s;
+    pointer-events:none; /* <-- no intercepta el click */ }
+  @keyframes slideOut{from{transform:translate(-50%,-100%)}to{transform:translate(-50%,8px)}}
+  @keyframes growToFull{from{transform:translate(-50%,8px)}to{transform:translate(-50%,0)}}
+  .strip.is-sliding{opacity:1;animation:slideOut 2.2s cubic-bezier(.22,.82,.27,1) forwards}
+  .strip.is-expanding{position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(760px,96vw);
+    max-height:100svh;overflow:auto;border-radius:10px;background:#fff;animation:growToFull 1.1s ease-out forwards;
+    scroll-snap-type:y mandatory;-webkit-overflow-scrolling:touch;pointer-events:auto} /* <-- ya interactúa */
+  .frame{background:#fff;border:12px solid #fff;border-radius:10px;margin:14px 10px 18px;
+    box-shadow:0 6px 24px rgba(0,0,0,.12);scroll-snap-align:start}
+  .content{min-height: clamp(240px,72svh,760px);padding: clamp(18px,4vw,34px);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+    background:linear-gradient(135deg,#fafafa,#f0f0f0)}
+  .num{font:600 12px/1 Arial,sans-serif;letter-spacing:.32em;color:var(--gold);margin-bottom:12px}
+  .ttl{font-size:clamp(26px,4.2vw,40px);margin:0 0 6px}
+  .amp{font:500 16px/1 Arial,sans-serif;color:#777;margin:6px 0 10px}
+  .sub{font:400 15px/1.5 Arial,sans-serif;color:#666;max-width:38ch}
+  .divider{width:64px;height:2px;background:var(--gold);margin:12px auto 10px}
+  .label{font:700 11px/1 Arial,sans-serif;text-transform:uppercase;letter-spacing:.24em;color:var(--gold);margin-bottom:6px}
+  .detail{font:400 16px/1.5 Arial,sans-serif;color:#555}
+  .footer{margin:10px 0 0;text-align:center;color:#9a9a9a;font:600 12px/1 Arial,sans-serif;letter-spacing:.22em}
 </style>
 </head>
 <body>
   <div class="wrap">
-    <section class="photobooth" id="photobooth">
+    <section class="photobooth">
       <div class="screen">
         <p class="t1" id="s1">READY TO CAPTURE</p>
         <p class="t2" id="s2">Press the button below</p>
@@ -123,61 +59,24 @@
       </div>
       <div class="slot">
         <div class="strip" id="strip" aria-live="polite">
-          <!-- Foto 1 -->
-          <article class="frame">
-            <div class="content" data-parallax>
-              <div class="num">01</div>
-              <h2 class="ttl" id="bride">Sofía</h2>
-              <div class="amp">&amp;</div>
-              <h2 class="ttl" id="groom">Miguel</h2>
-              <div class="divider"></div>
-              <p class="sub" id="date">26·09·2026</p>
-            </div>
-          </article>
-          <!-- Foto 2 -->
-          <article class="frame">
-            <div class="content" data-parallax>
-              <div class="num">02</div>
-              <h3 class="ttl">Our Story</h3>
-              <div class="divider"></div>
-              <p class="sub" id="story">
-                Two hearts, one journey. From the moment we met, we knew our story was just beginning. Now we invite you to witness the next beautiful chapter.
-              </p>
-            </div>
-          </article>
-          <!-- Foto 3 -->
-          <article class="frame">
-            <div class="content" data-parallax>
-              <div class="num">03</div>
-              <h3 class="ttl">Event Details</h3>
-              <div class="divider"></div>
-              <div class="event">
-                <div class="label">Ceremony</div>
-                <div class="detail" id="ceremony">4:00 PM · Garden Chapel</div>
-              </div>
-              <div class="event">
-                <div class="label">Dinner</div>
-                <div class="detail" id="dinner">6:30 PM · Grand Ballroom</div>
-              </div>
-              <div class="event">
-                <div class="label">Party</div>
-                <div class="detail" id="party">9:00 PM · Dance Floor</div>
-              </div>
-            </div>
-          </article>
-          <!-- Foto 4 -->
-          <article class="frame">
-            <div class="content" data-parallax>
-              <div class="num">04</div>
-              <h3 class="ttl">RSVP</h3>
-              <div class="divider"></div>
-              <p class="sub" id="rsvp">
-                Please confirm your attendance by August 26, 2026<br><br>
-                Contact: wedding@frutosmorin.com<br>
-                +1 (555) 123-4567
-              </p>
-            </div>
-          </article>
+          <article class="frame"><div class="content" data-parallax>
+            <div class="num">01</div><h2 class="ttl" id="bride">Sofía</h2><div class="amp">&amp;</div>
+            <h2 class="ttl" id="groom">Miguel</h2><div class="divider"></div><p class="sub" id="date">26·09·2026</p>
+          </div></article>
+          <article class="frame"><div class="content" data-parallax>
+            <div class="num">02</div><h3 class="ttl">Our Story</h3><div class="divider"></div>
+            <p class="sub" id="story">Two hearts, one journey…</p>
+          </div></article>
+          <article class="frame"><div class="content" data-parallax>
+            <div class="num">03</div><h3 class="ttl">Event Details</h3><div class="divider"></div>
+            <div class="label">Ceremony</div><div class="detail" id="ceremony">4:00 PM · Garden Chapel</div>
+            <div class="label" style="margin-top:10px">Dinner</div><div class="detail" id="dinner">6:30 PM · Grand Ballroom</div>
+            <div class="label" style="margin-top:10px">Party</div><div class="detail" id="party">9:00 PM · Dance Floor</div>
+          </div></article>
+          <article class="frame"><div class="content" data-parallax>
+            <div class="num">04</div><h3 class="ttl">RSVP</h3><div class="divider"></div>
+            <p class="sub" id="rsvp">Please confirm by Aug 26, 2026<br><br>Contact: wedding@frutosmorin.com</p>
+          </div></article>
         </div>
       </div>
     </section>
@@ -185,21 +84,21 @@
   </div>
 
 <script>
-  // ====== Interacción ======
+document.addEventListener('DOMContentLoaded', () => {
   const btn = document.getElementById('btn');
   const strip = document.getElementById('strip');
   const s1 = document.getElementById('s1');
   const s2 = document.getElementById('s2');
-  const footdate = document.getElementById('footdate');
+
+  if(!btn || !strip){ console.error('No se encontró el botón o la tira'); return; }
 
   let started = false;
   const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  // Fallback si no llega animationend
   let slideTimeoutId = null;
-  const FORCE_EXPAND_MS = 2800; // > 2.2s
+  const FORCE_EXPAND_MS = 2800;
 
-  btn.addEventListener('click', () => {
+  btn.addEventListener('click', (ev) => {
+    console.log('CLICK botón'); // debug
     if (started) return;
     started = true;
 
@@ -209,7 +108,7 @@
     if (prefersReduced) {
       strip.style.opacity = '1';
       strip.style.transform = 'translate(-50%, 8px)';
-      requestAnimationFrame(() => onSlideEnd());
+      requestAnimationFrame(onSlideEnd);
       return;
     }
 
@@ -217,7 +116,10 @@
     strip.addEventListener('animationend', onSlideEnd, { once:true });
 
     slideTimeoutId = setTimeout(() => {
-      if (!strip.classList.contains('is-expanding')) onSlideEnd();
+      if (!strip.classList.contains('is-expanding')) {
+        console.warn('Forzando expansión (fallback)');
+        onSlideEnd();
+      }
     }, FORCE_EXPAND_MS);
   });
 
@@ -229,51 +131,7 @@
       strip.focus({ preventScroll:true });
     }, 160);
   }
-
-  // Parallax suave
-  const parallaxItems = document.querySelectorAll('[data-parallax]');
-  let ticking = false;
-  function onScroll(){
-    if (!ticking){
-      window.requestAnimationFrame(() => {
-        const vh = window.innerHeight || 800;
-        parallaxItems.forEach(el=>{
-          const rect = el.getBoundingClientRect();
-          const center = rect.top + rect.height/2 - vh/2;
-          const offset = Math.max(-60, Math.min(60, -center*0.06));
-          el.style.transform = `translateY(${offset}px)`;
-          el.style.opacity = 1 - Math.abs(center)/(vh*1.4);
-        });
-        ticking = false;
-      });
-      ticking = true;
-    }
-  }
-  strip.addEventListener('scroll', onScroll, { passive:true });
-
-  // ====== Textos rápidos ======
-  const config = {
-    bride: "Sofía",
-    groom: "Miguel",
-    date: "26·09·2026",
-    story: "Two hearts, one journey. From the moment we met, we knew our story was just beginning. Now we invite you to witness the next beautiful chapter.",
-    ceremony: "4:00 PM · Garden Chapel",
-    dinner: "6:30 PM · Grand Ballroom",
-    party: "9:00 PM · Dance Floor",
-    rsvp: "Please confirm your attendance by August 26, 2026\n\nContact: wedding@frutosmorin.com\n+1 (555) 123-4567"
-  };
-
-  (function applyConfig(){
-    document.getElementById('bride').textContent = config.bride;
-    document.getElementById('groom').textContent = config.groom;
-    document.getElementById('date').textContent  = config.date;
-    document.getElementById('story').textContent = config.story;
-    document.getElementById('ceremony').textContent = config.ceremony;
-    document.getElementById('dinner').textContent   = config.dinner;
-    document.getElementById('party').textContent    = config.party;
-    document.getElementById('rsvp').innerHTML = config.rsvp.replace(/\n/g,'<br>');
-    footdate.textContent = config.date;
-  })();
+});
 </script>
 </body>
 </html>
