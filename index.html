@@ -27,7 +27,7 @@ body{
   background:linear-gradient(135deg,#ececec,#d2d2d2);
   border-radius:22px 22px 12px 12px;
   padding:24px 22px 18px;
-  position:relative; /* clave: ancla de la tira */
+  position:relative; /* referencia para la tira */
   box-shadow:var(--shadow);
   overflow:visible;
 }
@@ -63,16 +63,16 @@ body{
   box-shadow:inset 0 4px 10px rgba(0,0,0,.65);
 }
 
-/* Tira: ABSOLUTA respecto al photobooth, nace del borde inferior */
+/* Tira: ABSOLUTA respecto al photobooth, anclaje dinámico al borde inferior de la ranura */
 .strip{
   position:absolute; left:50%;
-  top:100%; /* anclada al borde inferior del photobooth */
-  transform:translate(-50%,-100%); /* empieza oculta “dentro” */
+  top:0;                         /* se fija por JS a (slot.offsetTop + slot.offsetHeight) */
+  transform:translate(-50%,-100%); /* empieza oculta “dentro” de la ranura */
   width:min(400px,78vw);
   background:var(--frame); border-radius:8px;
   padding:18px 14px; box-shadow:var(--shadow);
   opacity:0; pointer-events:none; z-index:20;
-  will-change:transform,opacity;
+  will-change:transform,opacity,top;
 }
 
 /* Deslizamiento: de -100% (dentro) a +var(--slide-out) (fuera) */
@@ -105,7 +105,7 @@ body{
 .amp{font:500 16px/1 Arial,sans-serif;color:#777;margin:6px 0 10px}
 .sub{font:400 15px/1.5 Arial,sans-serif;color:#666;max-width:38ch}
 .divider{width:64px;height:2px;background:var(--gold);margin:12px auto 10px}
-.label{font:700 11px/1 Arial,sans-serif;text-transform:uppercase;letter-spacing:.24em;color:var(--gold);margin:10px 0 6px}
+.label{font:700 11px/1 Arial,sans-serif;text-transform:uppercase;letter-spacing:.24em;color:#gold;margin:10px 0 6px}
 .detail{font:400 16px/1.5 Arial,sans-serif;color:#555}
 
 .footer{text-align:center;color:#9a9a9a;font:600 12px/1 Arial,sans-serif;letter-spacing:.22em;margin-top:40px}
@@ -130,7 +130,7 @@ body{
     </div>
     <div class="slot" id="slot"></div>
 
-    <!-- La tira va ABSOLUTA dentro del photobooth (nace del borde inferior) -->
+    <!-- La tira va ABSOLUTA dentro del photobooth -->
     <div class="strip" id="strip">
       <article class="frame"><div class="content"><div class="num">01</div><h2 class="ttl">Lidia</h2><div class="amp">&amp;</div><h2 class="ttl">Jorge</h2><div class="divider"></div><p class="sub">26·09·2026</p></div></article>
       <article class="frame"><div class="content"><div class="num">02</div><h3 class="ttl">Nuestra historia</h3><div class="divider"></div><p class="sub">Dos corazones, un camino. Desde que nos conocimos supimos que la historia acababa de empezar. Ahora queremos compartir el siguiente capítulo con vosotros.</p></div></article>
@@ -147,32 +147,47 @@ body{
 
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
-  const btn  = document.getElementById('btn');
+  const pb   = document.getElementById('photobooth');
+  const slot = document.getElementById('slot');
   const strip= document.getElementById('strip');
+  const btn  = document.getElementById('btn');
   const dock = document.getElementById('dock');
+
   let started=false, docked=false;
 
-  btn.addEventListener('click',()=>{
-    if(started) return; started=true;
+  // Calcula top exacto = borde inferior de la ranura, relativo al photobooth
+  function anchorStripToSlot(){
+    const topPx = slot.offsetTop + slot.offsetHeight;   // relativo a photobooth (padre posicionado)
+    strip.style.top = topPx + 'px';
+  }
 
-    // asegurar arranque de animación
+  // Recalcular al cargar, en resize y justo antes de animar
+  anchorStripToSlot();
+  window.addEventListener('resize', anchorStripToSlot);
+  // Por si cambian alturas por fuentes/carga tardía
+  setTimeout(anchorStripToSlot, 50);
+  setTimeout(anchorStripToSlot, 300);
+
+  btn.addEventListener('click',()=>{
+    if(started) return; started = true;
+
+    anchorStripToSlot();       // asegurar anclaje exacto
     strip.style.opacity='1';
-    void strip.offsetWidth; // reflow
+    void strip.offsetWidth;    // reflow para reiniciar animación
     strip.classList.add('is-sliding');
 
     strip.addEventListener('animationend',()=>{
-      if(docked) return; docked=true;
+      if(docked) return; docked = true;
 
-      // pasar a flujo normal (debajo y centrada)
+      // Pasar a flujo normal, centrado
       strip.classList.remove('is-sliding');
       strip.classList.add('is-docked');
       dock.insertAdjacentElement('afterbegin', strip);
       strip.style.marginLeft='auto';
       strip.style.marginRight='auto';
 
-      // scroll suave al inicio de la tira
-      const photobooth = document.getElementById('photobooth');
-      const y = photobooth.getBoundingClientRect().bottom + window.scrollY - 12;
+      // Scroll suave hasta el borde inferior del photobooth
+      const y = pb.getBoundingClientRect().bottom + window.scrollY - 12;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }, { once:true });
   });
@@ -180,4 +195,3 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 </body>
 </html>
-
