@@ -5,353 +5,152 @@
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>Invitación de boda · Photobooth</title>
 <style>
-  :root{
-    --bg1:#ffffff; --bg2:#f6f6f6;
-    --ink:#2a2a2a; --gold:#d4af37;
-    --btn:#e01919; --frame:#ffffff;
-    --shadow: 0 18px 60px rgba(0,0,0,.18);
-    /* Distancia que “asoma” la tira antes de acoplarse (ajusta si quieres) */
-    --slide-out: 150px;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{
-    margin:0; font-family:Georgia,serif; color:var(--ink);
-    background:linear-gradient(to bottom,var(--bg1),var(--bg2));
-    overflow-x:hidden;
-  }
-  .wrap{
-    min-height:100svh; display:flex; flex-direction:column; align-items:center;
-    gap:24px; padding:24px;
-  }
+:root{
+  --bg1:#ffffff; --bg2:#f6f6f6;
+  --ink:#2a2a2a; --gold:#d4af37;
+  --btn:#e01919; --frame:#ffffff;
+  --shadow:0 18px 60px rgba(0,0,0,.18);
+  --slide-out:150px;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  font-family:Georgia,serif; color:var(--ink);
+  background:linear-gradient(to bottom,var(--bg1),var(--bg2));
+  overflow-x:hidden;
+  transition:background 1s ease;
+}
+.wrap{display:flex;flex-direction:column;align-items:center;padding:24px;gap:24px;}
 
-  /* Máquina */
-  .photobooth{
-    width:min(560px,92vw);
-    background:linear-gradient(135deg,#ececec,#d2d2d2);
-    border-radius:22px 22px 12px 12px;
-    padding:24px 22px 18px;
-    position:relative; box-shadow:var(--shadow);
-    overflow:visible; /* permite ver la tira al salir */
-  }
-  .photobooth::before{
-    content:""; position:absolute; top:10px; left:50%; transform:translateX(-50%);
-    width:68px; height:10px; border-radius:6px; background:#a9a9a9;
-  }
-  .screen{
-    background:#121212; border-radius:12px; padding:24px 18px; text-align:center;
-    box-shadow:inset 0 6px 18px rgba(0,0,0,.55);
-  }
-  .t1{ color:var(--gold); letter-spacing:.2em; text-transform:uppercase; margin:0 0 6px; font-size:14px }
-  .t2{ color:#9a9a9a; font:500 12px/1.2 Arial,sans-serif; margin:0 }
+/* Máquina */
+.photobooth{
+  width:min(560px,92vw);
+  background:linear-gradient(135deg,#ececec,#d2d2d2);
+  border-radius:22px 22px 12px 12px;
+  padding:24px 22px 18px;
+  position:relative; box-shadow:var(--shadow);
+}
+.photobooth::before{
+  content:""; position:absolute; top:10px; left:50%; transform:translateX(-50%);
+  width:68px; height:10px; border-radius:6px; background:#a9a9a9;
+}
+.screen{
+  background:#121212; border-radius:12px; padding:24px 18px; text-align:center;
+  box-shadow:inset 0 6px 18px rgba(0,0,0,.55);
+}
+.t1{color:var(--gold);letter-spacing:.2em;text-transform:uppercase;margin:0 0 6px;font-size:14px}
+.t2{color:#9a9a9a;font:500 12px/1.2 Arial,sans-serif;margin:0}
+.button-zone{display:flex;justify-content:center;padding:16px 0 12px}
+.red-btn{
+  width:104px;height:104px;border-radius:50%;
+  background:radial-gradient(circle at 30% 30%,#ff5151,var(--btn));
+  border:6px solid #1f1f1f;cursor:pointer;
+  box-shadow:0 10px 26px rgba(224,25,25,.45),inset 0 -6px 12px rgba(0,0,0,.35);
+  transition:transform .15s ease;position:relative;z-index:10;
+}
+.red-btn:hover{transform:translateY(-2px)}
+.red-btn:active{transform:translateY(2px)}
+.red-btn::after{
+  content:"PRESS";position:absolute;left:50%;transform:translateX(-50%);
+  margin-top:116px;font:600 11px/1 Arial,sans-serif;letter-spacing:.22em;color:#6d6d6d;
+}
 
-  .button-zone{ display:flex; justify-content:center; padding:16px 0 12px }
-  .red-btn{
-    position:relative; z-index:10; width:104px; height:104px; border-radius:50%;
-    background:radial-gradient(circle at 30% 30%,#ff5151,var(--btn));
-    border:6px solid #1f1f1f; cursor:pointer;
-    box-shadow:0 10px 26px rgba(224,25,25,.45), inset 0 -6px 12px rgba(0,0,0,.35);
-    transition:transform .15s ease;
-  }
-  .red-btn:hover{ transform:translateY(-2px) }
-  .red-btn:active{ transform:translateY(2px) }
-  .red-btn::after{
-    content:"PULSE"; position:absolute; left:50%; transform:translateX(-50%);
-    margin-top:80px; font:600 11px/1 Arial,sans-serif; letter-spacing:.22em; color:#6d6d6d;
-  }
+/* Ranura */
+.slot{
+  width:min(420px,80%);height:22px;margin:0 auto;
+  background:#121212;border-radius:0 0 12px 12px;
+  box-shadow:inset 0 4px 10px rgba(0,0,0,.65);
+  position:relative;overflow:hidden;
+}
 
-  /* Ranura */
-  .slot{
-    width:min(420px,80%); height:22px; margin:0 auto; background:#121212;
-    border-radius:0 0 12px 12px; box-shadow:inset 0 4px 10px rgba(0,0,0,.65);
-    position:relative; overflow:hidden; /* estado normal: recorta */
-  }
-  .slot.releasing{ overflow:visible; } /* durante el slide: deja ver la tira afuera */
+/* Tira: inicialmente dentro de la ranura */
+.strip{
+  position:absolute;left:50%;bottom:0;transform:translate(-50%,100%);
+  width:min(380px,72vw);background:var(--frame);border-radius:8px;
+  padding:18px 14px;box-shadow:var(--shadow);
+  opacity:0;pointer-events:none;z-index:20;
+}
+@keyframes slideOut{
+  0%{transform:translate(-50%,100%);opacity:1;}
+  100%{transform:translate(-50%,var(--slide-out));opacity:1;}
+}
+.strip.is-sliding{animation:slideOut 2.2s cubic-bezier(.22,.82,.27,1) forwards;}
 
-  /* Tira (mientras está en la ranura) */
-  .strip{
-    position:absolute; left:50%; transform:translate(-50%,-100%); /* oculta arriba */
-    width:min(380px,72vw); background:var(--frame); border-radius:8px; padding:18px 14px;
-    box-shadow:var(--shadow); opacity:0; transition:opacity .3s;
-    pointer-events:none; z-index:20;
-  }
+/* Cuando ya está desplegada en el flujo normal */
+.strip.is-docked{
+  position:relative;left:auto;transform:none;opacity:1;pointer-events:auto;
+  width:min(760px,96vw);margin-top:var(--slide-out);
+}
 
-  /* Sale desde la ranura (usa la variable para la distancia) */
-  @keyframes slideOut{
-    0%   { transform:translate(-50%,-100%); }
-    100% { transform:translate(-50%, var(--slide-out)); }
-  }
+/* Cada foto */
+.frame{
+  background:#fff;border:12px solid #fff;border-radius:10px;
+  margin:14px 10px 18px;box-shadow:0 6px 24px rgba(0,0,0,.12);
+}
+.content{
+  min-height:clamp(240px,72svh,760px);
+  padding:clamp(18px,4vw,34px);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
+  background:linear-gradient(135deg,#fafafa,#f0f0f0);
+}
+.num{font:600 12px/1 Arial,sans-serif;letter-spacing:.32em;color:var(--gold);margin-bottom:12px}
+.ttl{font-size:clamp(26px,4.2vw,40px);margin:0 0 6px}
+.amp{font:500 16px/1 Arial,sans-serif;color:#777;margin:6px 0 10px}
+.sub{font:400 15px/1.5 Arial,sans-serif;color:#666;max-width:38ch}
+.divider{width:64px;height:2px;background:var(--gold);margin:12px auto 10px}
+.label{font:700 11px/1 Arial,sans-serif;text-transform:uppercase;letter-spacing:.24em;color:var(--gold);margin:10px 0 6px}
+.detail{font:400 16px/1.5 Arial,sans-serif;color:#555}
+.footer{text-align:center;color:#9a9a9a;font:600 12px/1 Arial,sans-serif;letter-spacing:.22em;margin-top:40px}
 
-  .strip.is-sliding{
-    opacity:1; animation:slideOut 2.2s cubic-bezier(.22,.82,.27,1) forwards;
-  }
-
-  /* Dock: contenedor donde la tira queda acoplada debajo del photobooth */
-  .dock{
-    width:100%;
-    display:flex; justify-content:center;
-    /* pequeño espacio respecto a la máquina */
-    padding-top: 6px;
-  }
-
-  /* Tira acoplada (flujo normal, NO se superpone) */
-  .strip.is-docked{
-    position:static; transform:none; opacity:1; pointer-events:auto;
-    width:min(760px,96vw);
-    max-height:100svh; overflow:auto;
-    border-radius:10px; background:#fff;
-    scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch;
-  }
-
-  /* Cada “foto” */
-  .frame{
-    background:#fff; border:12px solid #fff; border-radius:10px;
-    margin:14px 10px 18px; box-shadow:0 6px 24px rgba(0,0,0,.12); scroll-snap-align:start;
-  }
-  .content{
-    min-height: clamp(240px,72svh,760px);
-    padding: clamp(18px,4vw,34px);
-    display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
-    background:linear-gradient(135deg,#fafafa,#f0f0f0);
-    will-change: transform, opacity;
-  }
-  .num{ font:600 12px/1 Arial,sans-serif; letter-spacing:.32em; color:var(--gold); margin-bottom:12px }
-  .ttl{ font-size:clamp(26px,4.2vw,40px); margin:0 0 6px }
-  .amp{ font:500 16px/1 Arial,sans-serif; color:#777; margin:6px 0 10px }
-  .sub{ font:400 15px/1.5 Arial,sans-serif; color:#666; max-width:38ch }
-  .divider{ width:64px; height:2px; background:var(--gold); margin:12px auto 10px }
-  .label{ font:700 11px/1 Arial,sans-serif; text-transform:uppercase; letter-spacing:.24em; color:var(--gold); margin:10px 0 6px }
-  .detail{ font:400 16px/1.5 Arial,sans-serif; color:#555 }
-
-  .footer{
-    margin:10px 0 0; text-align:center; color:#9a9a9a;
-    font:600 12px/1 Arial,sans-serif; letter-spacing:.22em;
-  }
-
-  @media (prefers-reduced-motion: reduce){
-    .strip{ transition:none; animation:none !important; opacity:1 }
-    .strip.is-sliding{ transform:translate(-50%, var(--slide-out)) !important }
-  }
-  @media (max-width:600px){
-    :root{ --slide-out: 130px; } /* un poco menos en móvil */
-    .photobooth{ padding:18px 14px 14px }
-    .red-btn{ width:86px; height:86px }
-    .slot{ height:20px }
-    .frame{ border-width:10px }
-  }
+@media (max-width:600px){
+  :root{--slide-out:120px;}
+  .photobooth{padding:18px 14px 14px}
+  .red-btn{width:86px;height:86px}
+  .frame{border-width:10px}
+}
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <!-- MÁQUINA -->
-    <section class="photobooth" id="photobooth">
-      <div class="screen">
-        <p class="t1" id="s1">LISTO PARA CAPTURAR</p>
-        <p class="t2" id="s2">Pulsa el botón para comenzar</p>
+<div class="wrap">
+  <section class="photobooth" id="photobooth">
+    <div class="screen">
+      <p class="t1" id="s1">LISTO PARA CAPTURAR</p>
+      <p class="t2" id="s2">Pulsa el botón para comenzar</p>
+    </div>
+    <div class="button-zone">
+      <button class="red-btn" id="btn"></button>
+    </div>
+    <div class="slot" id="slot">
+      <div class="strip" id="strip">
+        <article class="frame"><div class="content"><div class="num">01</div><h2 class="ttl">Lidia</h2><div class="amp">&amp;</div><h2 class="ttl">Jorge</h2><div class="divider"></div><p class="sub">26·09·2026</p></div></article>
+        <article class="frame"><div class="content"><div class="num">02</div><h3 class="ttl">Nuestra historia</h3><div class="divider"></div><p class="sub">Dos corazones, un camino. Desde que nos conocimos supimos que la historia acababa de empezar. Ahora queremos compartir el siguiente capítulo con vosotros.</p></div></article>
+        <article class="frame"><div class="content"><div class="num">03</div><h3 class="ttl">Detalles</h3><div class="divider"></div><div class="label">Ceremonia</div><div class="detail">17:00 · —</div><div class="label">Cena</div><div class="detail">20:00 · —</div><div class="label">Fiesta</div><div class="detail">23:30 · —</div></div></article>
+        <article class="frame"><div class="content"><div class="num">04</div><h3 class="ttl">Confirmación</h3><div class="divider"></div><p class="sub">Confirma tu asistencia antes del 26/08/2026<br><br>Contacto: wedding@frutosmorin.com<br>+34 600 000 000</p></div></article>
       </div>
-      <div class="button-zone">
-        <button class="red-btn" id="btn" aria-label="Mostrar invitación"></button>
-      </div>
-      <div class="slot" id="slot">
-        <!-- Tira inicialmente dentro de la ranura -->
-        <div class="strip" id="strip" aria-live="polite">
-          <!-- Foto 1 -->
-          <article class="frame">
-            <div class="content" data-parallax>
-              <div class="num">01</div>
-              <h2 class="ttl" id="bride">Lidia</h2>
-              <div class="amp">&amp;</div>
-              <h2 class="ttl" id="groom">Jorge</h2>
-              <div class="divider"></div>
-              <p class="sub" id="date">26·09·2026</p>
-            </div>
-          </article>
-          <!-- Foto 2 -->
-          <article class="frame">
-            <div class="content" data-parallax>
-              <div class="num">02</div>
-              <h3 class="ttl">Nuestra historia</h3>
-              <div class="divider"></div>
-              <p class="sub" id="story">
-                Dos corazones, un camino. Desde que nos conocimos supimos que la historia acababa de empezar. Ahora queremos compartir el siguiente capítulo con vosotros.
-              </p>
-            </div>
-          </article>
-          <!-- Foto 3 -->
-          <article class="frame">
-            <div class="content" data-parallax>
-              <div class="num">03</div>
-              <h3 class="ttl">Detalles</h3>
-              <div class="divider"></div>
-              <div class="label">Ceremonia</div>
-              <div class="detail" id="ceremony">17:00 · —</div>
-              <div class="label">Cena</div>
-              <div class="detail" id="dinner">20:00 · —</div>
-              <div class="label">Fiesta</div>
-              <div class="detail" id="party">23:30 · —</div>
-            </div>
-          </article>
-          <!-- Foto 4 -->
-          <article class="frame">
-            <div class="content" data-parallax>
-              <div class="num">04</div>
-              <h3 class="ttl">Confirmación</h3>
-              <div class="divider"></div>
-              <p class="sub" id="rsvp">
-                Confirma tu asistencia antes del 26/08/2026<br><br>
-                Contacto: wedding@frutosmorin.com<br>
-                +34 600 000 000
-              </p>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
-
-    <!-- DOCK: aquí se acopla la tira cuando termina el slide -->
-    <div class="dock" id="dock"></div>
-
-    <p class="footer">Jorge & Lidia — <span id="footdate">26·09·2026</span></p>
-  </div>
+    </div>
+  </section>
+  <p class="footer">Jorge & Lidia — 26·09·2026</p>
+</div>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const $ = (id) => document.getElementById(id);
-  const btn   = $('btn');
-  const strip = $('strip');
-  const slot  = $('slot');
-  const dock  = $('dock');
-  const s1    = $('s1');
-  const s2    = $('s2');
-
-  if(!btn || !strip || !slot || !dock){ console.error('[PB] Falta #btn/#strip/#slot/#dock'); return; }
-
-  // Accesibilidad básica
-  btn.setAttribute('role','button');
-  btn.setAttribute('aria-pressed','false');
-  btn.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
-  });
-
-  // Asegura que el botón no queda tapado
-  btn.style.zIndex = '10';
-  btn.style.position = 'relative';
-
-  let started = false;
-  let stripDocked = false;
-  const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-  let slideTimeoutId = null;
-  const SLIDE_MS = 2200;
-  const FORCE_EXPAND_MS = SLIDE_MS + 800;
-
-  function dockStrip(origin='dock'){
-    if (stripDocked) return;
-    stripDocked = true;
-
-    // Quita estado de “salida por ranura”
-    slot.classList.remove('releasing');
-
-    // Mueve la tira debajo del photobooth (flujo normal)
-    try { dock.appendChild(strip); } catch {}
-
-    // Limpia estilos de la fase “en ranura”
-    strip.style.opacity = '1';
-    strip.style.transform = 'none';
-    strip.classList.remove('is-sliding');
-
-    // Activa modo acoplado (scroll y snap)
-    strip.classList.add('is-docked');
-
-    // Mensajes en pantalla
-    s1.textContent = '¡COMPLETADO!';
-    s2.textContent = 'Desliza para ver la invitación';
-
-    // Enfoque accesible
-    strip.setAttribute('tabindex','-1');
-    try { strip.focus({ preventScroll:true }); } catch {}
-  }
-
-  function onSlideEnd(){
-    clearTimeout(slideTimeoutId);
-    // pequeño retardo para naturalidad
-    setTimeout(() => dockStrip('animationend'), 140);
-  }
-
-  btn.addEventListener('click', () => {
-    if (started) return;
-    started = true;
-    btn.setAttribute('aria-pressed','true');
-
-    // Mientras sale, permite ver fuera de la ranura
-    slot.classList.add('releasing');
-
-    if (prefersReduced){
-      // Sin animación: deja “asomar” y acopla
-      strip.style.opacity = '1';
-      strip.style.transform = `translate(-50%, var(--slide-out))`;
-      requestAnimationFrame(() => onSlideEnd());
-      return;
-    }
-
-    // Inicia animación desde la ranura
+document.addEventListener('DOMContentLoaded',()=>{
+  const btn=document.getElementById('btn');
+  const strip=document.getElementById('strip');
+  const slot=document.getElementById('slot');
+  const wrap=document.querySelector('.wrap');
+  let started=false;
+  btn.addEventListener('click',()=>{
+    if(started)return; started=true;
+    strip.style.opacity='1';
     strip.classList.add('is-sliding');
-
-    // Eventos estándar y WebKit
-    strip.addEventListener('animationend', onSlideEnd, { once:true });
-    strip.addEventListener('webkitAnimationEnd', onSlideEnd, { once:true });
-
-    // Fallback si no llegara animationend
-    slideTimeoutId = setTimeout(() => {
-      if (!stripDocked) dockStrip('timeout');
-    }, FORCE_EXPAND_MS);
-  }, { passive:true });
-
-  // Parallax suave (solo cuando está acoplada)
-  const parallaxItems = document.querySelectorAll('[data-parallax]');
-  let ticking = false;
-  function onScroll(){
-    if (!stripDocked) return;
-    if (!ticking){
-      window.requestAnimationFrame(() => {
-        const vh = window.innerHeight || 800;
-        parallaxItems.forEach(el=>{
-          const rect = el.getBoundingClientRect();
-          const center = rect.top + rect.height/2 - vh/2;
-          const offset = Math.max(-60, Math.min(60, -center*0.06));
-          el.style.transform = `translateY(${offset}px)`;
-          el.style.opacity = 1 - Math.abs(center)/(vh*1.4);
-        });
-        ticking = false;
-      });
-      ticking = true;
-    }
-  }
-  strip.addEventListener('scroll', onScroll, { passive:true });
-
-  // Textos rápidos (edita si quieres)
-  const config = {
-    bride: "Lidia",
-    groom: "Jorge",
-    date: "26·09·2026",
-    story: "Dos corazones, un camino. Desde que nos conocimos supimos que la historia acababa de empezar. Ahora queremos compartir el siguiente capítulo con vosotros.",
-    ceremony: "17:00 · —",
-    dinner:   "20:00 · —",
-    party:    "23:30 · —",
-    rsvp: "Confirma tu asistencia antes del 26/08/2026\n\nContacto: wedding@frutosmorin.com\n+34 600 000 000"
-  };
-
-  (function applyConfig(){
-    document.getElementById('bride').textContent = config.bride;
-    document.getElementById('groom').textContent = config.groom;
-    document.getElementById('date').textContent  = config.date;
-    document.getElementById('story').textContent = config.story;
-    document.getElementById('ceremony').textContent = config.ceremony;
-    document.getElementById('dinner').textContent   = config.dinner;
-    document.getElementById('party').textContent    = config.party;
-    document.getElementById('rsvp').innerHTML = config.rsvp.replace(/\n/g,'<br>');
-    document.getElementById('footdate').textContent = config.date;
-  })();
+    strip.addEventListener('animationend',()=>{
+      // cuando termina la animación, la tira se integra debajo del photobooth
+      strip.classList.remove('is-sliding');
+      strip.classList.add('is-docked');
+      slot.after(strip); // la coloca justo debajo de la ranura
+      window.scrollTo({top:slot.offsetTop,behavior:'smooth'});
+    },{once:true});
+  });
 });
 </script>
 </body>
