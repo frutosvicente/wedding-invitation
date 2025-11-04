@@ -10,6 +10,8 @@
     --ink:#2a2a2a; --gold:#d4af37;
     --btn:#e01919; --frame:#ffffff;
     --shadow: 0 18px 60px rgba(0,0,0,.18);
+    /* Distancia que “asoma” la tira antes de acoplarse (ajusta si quieres) */
+    --slide-out: 150px;
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -18,15 +20,19 @@
     background:linear-gradient(to bottom,var(--bg1),var(--bg2));
     overflow-x:hidden;
   }
-  .wrap{min-height:100svh; display:flex; flex-direction:column; align-items:center; gap:24px; padding:24px}
+  .wrap{
+    min-height:100svh; display:flex; flex-direction:column; align-items:center;
+    gap:24px; padding:24px;
+  }
 
   /* Máquina */
   .photobooth{
     width:min(560px,92vw);
     background:linear-gradient(135deg,#ececec,#d2d2d2);
-    border-radius:22px 22px 12px 12px; padding:24px 22px 18px;
+    border-radius:22px 22px 12px 12px;
+    padding:24px 22px 18px;
     position:relative; box-shadow:var(--shadow);
-    overflow:visible; /* permite ver contenido que se “asome” */
+    overflow:visible; /* permite ver la tira al salir */
   }
   .photobooth::before{
     content:""; position:absolute; top:10px; left:50%; transform:translateX(-50%);
@@ -51,18 +57,18 @@
   .red-btn:active{ transform:translateY(2px) }
   .red-btn::after{
     content:"PULSE"; position:absolute; left:50%; transform:translateX(-50%);
-    margin-top:90px; font:600 11px/1 Arial,sans-serif; letter-spacing:.22em; color:#6d6d6d;
+    margin-top:80px; font:600 11px/1 Arial,sans-serif; letter-spacing:.22em; color:#6d6d6d;
   }
 
   /* Ranura */
   .slot{
     width:min(420px,80%); height:22px; margin:0 auto; background:#121212;
     border-radius:0 0 12px 12px; box-shadow:inset 0 4px 10px rgba(0,0,0,.65);
-    position:relative; overflow:hidden; /* estado normal */
+    position:relative; overflow:hidden; /* estado normal: recorta */
   }
-  .slot.releasing{ overflow:visible; } /* durante el slide se ve la tira fuera */
+  .slot.releasing{ overflow:visible; } /* durante el slide: deja ver la tira afuera */
 
-  /* Tira de fotos */
+  /* Tira (mientras está en la ranura) */
   .strip{
     position:absolute; left:50%; transform:translate(-50%,-100%); /* oculta arriba */
     width:min(380px,72vw); background:var(--frame); border-radius:8px; padding:18px 14px;
@@ -70,24 +76,31 @@
     pointer-events:none; z-index:20;
   }
 
-  /* Sale más (160px) para que se vea bien antes de expandir */
+  /* Sale desde la ranura (usa la variable para la distancia) */
   @keyframes slideOut{
     0%   { transform:translate(-50%,-100%); }
-    100% { transform:translate(-50%,160px); }
-  }
-  @keyframes growToFull{
-    0%   { transform:translate(-50%,160px); }
-    100% { transform:translate(-50%,0); }
+    100% { transform:translate(-50%, var(--slide-out)); }
   }
 
   .strip.is-sliding{
     opacity:1; animation:slideOut 2.2s cubic-bezier(.22,.82,.27,1) forwards;
   }
-  .strip.is-expanding{
-    position:fixed; top:0; left:50%; transform:translateX(-50%);
-    width:min(760px,96vw); max-height:100svh; overflow:auto; border-radius:10px; background:#fff;
-    animation:growToFull 1.1s ease-out forwards;
-    scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch; pointer-events:auto;
+
+  /* Dock: contenedor donde la tira queda acoplada debajo del photobooth */
+  .dock{
+    width:100%;
+    display:flex; justify-content:center;
+    /* pequeño espacio respecto a la máquina */
+    padding-top: 6px;
+  }
+
+  /* Tira acoplada (flujo normal, NO se superpone) */
+  .strip.is-docked{
+    position:static; transform:none; opacity:1; pointer-events:auto;
+    width:min(760px,96vw);
+    max-height:100svh; overflow:auto;
+    border-radius:10px; background:#fff;
+    scroll-snap-type:y mandatory; -webkit-overflow-scrolling:touch;
   }
 
   /* Cada “foto” */
@@ -117,10 +130,10 @@
 
   @media (prefers-reduced-motion: reduce){
     .strip{ transition:none; animation:none !important; opacity:1 }
-    .strip.is-sliding{ transform:translate(-50%,160px) !important }
-    .strip.is-expanding{ animation:none !important }
+    .strip.is-sliding{ transform:translate(-50%, var(--slide-out)) !important }
   }
   @media (max-width:600px){
+    :root{ --slide-out: 130px; } /* un poco menos en móvil */
     .photobooth{ padding:18px 14px 14px }
     .red-btn{ width:86px; height:86px }
     .slot{ height:20px }
@@ -130,6 +143,7 @@
 </head>
 <body>
   <div class="wrap">
+    <!-- MÁQUINA -->
     <section class="photobooth" id="photobooth">
       <div class="screen">
         <p class="t1" id="s1">LISTO PARA CAPTURAR</p>
@@ -139,6 +153,7 @@
         <button class="red-btn" id="btn" aria-label="Mostrar invitación"></button>
       </div>
       <div class="slot" id="slot">
+        <!-- Tira inicialmente dentro de la ranura -->
         <div class="strip" id="strip" aria-live="polite">
           <!-- Foto 1 -->
           <article class="frame">
@@ -192,6 +207,10 @@
         </div>
       </div>
     </section>
+
+    <!-- DOCK: aquí se acopla la tira cuando termina el slide -->
+    <div class="dock" id="dock"></div>
+
     <p class="footer">Jorge & Lidia — <span id="footdate">26·09·2026</span></p>
   </div>
 
@@ -201,75 +220,98 @@ document.addEventListener('DOMContentLoaded', () => {
   const btn   = $('btn');
   const strip = $('strip');
   const slot  = $('slot');
+  const dock  = $('dock');
   const s1    = $('s1');
   const s2    = $('s2');
 
-  if(!btn || !strip || !slot){ console.error('[PB] Falta #btn/#strip/#slot'); return; }
+  if(!btn || !strip || !slot || !dock){ console.error('[PB] Falta #btn/#strip/#slot/#dock'); return; }
+
+  // Accesibilidad básica
+  btn.setAttribute('role','button');
+  btn.setAttribute('aria-pressed','false');
+  btn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); btn.click(); }
+  });
 
   // Asegura que el botón no queda tapado
   btn.style.zIndex = '10';
   btn.style.position = 'relative';
 
   let started = false;
+  let stripDocked = false;
   const prefersReduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Timers de seguridad
   let slideTimeoutId = null;
   const SLIDE_MS = 2200;
   const FORCE_EXPAND_MS = SLIDE_MS + 800;
 
-  function expandNow(origin='fallback'){
-    console.log(`[PB] expandNow (${origin})`);
-    strip.classList.add('is-expanding');
+  function dockStrip(origin='dock'){
+    if (stripDocked) return;
+    stripDocked = true;
+
+    // Quita estado de “salida por ranura”
+    slot.classList.remove('releasing');
+
+    // Mueve la tira debajo del photobooth (flujo normal)
+    try { dock.appendChild(strip); } catch {}
+
+    // Limpia estilos de la fase “en ranura”
+    strip.style.opacity = '1';
+    strip.style.transform = 'none';
+    strip.classList.remove('is-sliding');
+
+    // Activa modo acoplado (scroll y snap)
+    strip.classList.add('is-docked');
+
+    // Mensajes en pantalla
+    s1.textContent = '¡COMPLETADO!';
+    s2.textContent = 'Desliza para ver la invitación';
+
+    // Enfoque accesible
     strip.setAttribute('tabindex','-1');
     try { strip.focus({ preventScroll:true }); } catch {}
   }
 
   function onSlideEnd(){
     clearTimeout(slideTimeoutId);
-    // al terminar el slide, ya no necesitamos que la ranura deje ver fuera
-    slot.classList.remove('releasing');
-    setTimeout(() => expandNow('animationend'), 160);
+    // pequeño retardo para naturalidad
+    setTimeout(() => dockStrip('animationend'), 140);
   }
 
   btn.addEventListener('click', () => {
     if (started) return;
     started = true;
-    console.log('[PB] click');
+    btn.setAttribute('aria-pressed','true');
 
-    s1.textContent = '¡COMPLETADO!';
-    s2.textContent = 'Desplázate para ver la invitación';
-
-    // Durante el slide, la ranura permite ver la tira fuera
+    // Mientras sale, permite ver fuera de la ranura
     slot.classList.add('releasing');
 
     if (prefersReduced){
+      // Sin animación: deja “asomar” y acopla
       strip.style.opacity = '1';
-      strip.style.transform = 'translate(-50%,160px)';
+      strip.style.transform = `translate(-50%, var(--slide-out))`;
       requestAnimationFrame(() => onSlideEnd());
       return;
     }
 
+    // Inicia animación desde la ranura
     strip.classList.add('is-sliding');
-    console.log('[PB] is-sliding');
 
     // Eventos estándar y WebKit
     strip.addEventListener('animationend', onSlideEnd, { once:true });
     strip.addEventListener('webkitAnimationEnd', onSlideEnd, { once:true });
 
-    // Fallback
+    // Fallback si no llegara animationend
     slideTimeoutId = setTimeout(() => {
-      if (!strip.classList.contains('is-expanding')){
-        console.warn('[PB] Forzando expansión por timeout');
-        onSlideEnd();
-      }
+      if (!stripDocked) dockStrip('timeout');
     }, FORCE_EXPAND_MS);
   }, { passive:true });
 
-  // Parallax suave (opcional)
+  // Parallax suave (solo cuando está acoplada)
   const parallaxItems = document.querySelectorAll('[data-parallax]');
   let ticking = false;
   function onScroll(){
+    if (!stripDocked) return;
     if (!ticking){
       window.requestAnimationFrame(() => {
         const vh = window.innerHeight || 800;
@@ -287,7 +329,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   strip.addEventListener('scroll', onScroll, { passive:true });
 
-  // Textos rápidos (edítalos si quieres)
+  // Textos rápidos (edita si quieres)
   const config = {
     bride: "Lidia",
     groom: "Jorge",
