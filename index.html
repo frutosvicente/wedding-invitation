@@ -27,8 +27,9 @@ body{
   background:linear-gradient(135deg,#ececec,#d2d2d2);
   border-radius:22px 22px 12px 12px;
   padding:24px 22px 18px;
-  position:relative; box-shadow:var(--shadow);
-  overflow:visible; /* dejamos salir la tira visualmente */
+  position:relative; /* clave: ancla de la tira */
+  box-shadow:var(--shadow);
+  overflow:visible;
 }
 .photobooth::before{
   content:""; position:absolute; top:10px; left:50%; transform:translateX(-50%);
@@ -55,54 +56,48 @@ body{
   margin-top:116px;font:600 11px/1 Arial,sans-serif;letter-spacing:.22em;color:#6d6d6d;
 }
 
-/* Ranura */
+/* Ranura (decorativa) */
 .slot{
   width:min(420px,80%);height:22px;margin:0 auto;
   background:#121212;border-radius:0 0 12px 12px;
   box-shadow:inset 0 4px 10px rgba(0,0,0,.65);
-  position:relative;
-  overflow:visible; /* importante: visible para ver movimiento */
-}
-/* “Labio” que tapa la parte superior: simula que nace de dentro */
-.slot::after{
-  content:""; position:absolute; left:-12px; right:-12px; top:-12px;
-  height:18px; z-index:25; pointer-events:none;
-  /* mismo look que la carcasa para ocultar lo que hay detrás */
-  background:linear-gradient(135deg,#ececec,#d2d2d2);
-  border-top-left-radius:14px; border-top-right-radius:14px;
 }
 
-/* Tira (anclada al borde superior de la ranura) */
+/* Tira: ABSOLUTA respecto al photobooth, nace del borde inferior */
 .strip{
-  position:absolute; left:50%; top:0; transform:translate(-50%,-100%); /* empieza “dentro” */
+  position:absolute; left:50%;
+  top:100%; /* anclada al borde inferior del photobooth */
+  transform:translate(-50%,-100%); /* empieza oculta “dentro” */
   width:min(400px,78vw);
   background:var(--frame); border-radius:8px;
   padding:18px 14px; box-shadow:var(--shadow);
-  opacity:0; pointer-events:none; z-index:20; /* debajo del labio (z:25) */
+  opacity:0; pointer-events:none; z-index:20;
   will-change:transform,opacity;
 }
+
+/* Deslizamiento: de -100% (dentro) a +var(--slide-out) (fuera) */
 @keyframes slideOut{
   0%  { transform:translate(-50%,-100%); opacity:1; }
   100%{ transform:translate(-50%, var(--slide-out)); opacity:1; }
 }
 .strip.is-sliding{ animation:slideOut 2.2s cubic-bezier(.22,.82,.27,1) forwards }
 
-/* Tira acoplada: flujo normal, centrada; scroll lo hace el body */
+/* Tira acoplada debajo (flujo normal), centrada; scroll del body */
 .strip.is-docked{
   position:relative; left:auto; top:auto; transform:none; opacity:1; pointer-events:auto;
   width:min(760px,96vw);
-  margin: calc(var(--slide-out) + 8px) auto 0; /* centrada con auto */
+  margin: calc(var(--slide-out) + 8px) auto 0;
 }
 
 /* Cada “foto” */
 .frame{
-  background:#fff; border:12px solid #fff; border-radius:10px;
-  margin:14px 10px 18px; box-shadow:0 6px 24px rgba(0,0,0,.12);
+  background:#fff;border:12px solid #fff;border-radius:10px;
+  margin:14px 10px 18px;box-shadow:0 6px 24px rgba(0,0,0,.12);
 }
 .content{
   min-height:clamp(240px,72svh,760px);
   padding:clamp(18px,4vw,34px);
-  display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
   background:linear-gradient(135deg,#fafafa,#f0f0f0);
 }
 .num{font:600 12px/1 Arial,sans-serif;letter-spacing:.32em;color:var(--gold);margin-bottom:12px}
@@ -133,17 +128,18 @@ body{
     <div class="button-zone">
       <button class="red-btn" id="btn" aria-label="Mostrar invitación"></button>
     </div>
-    <div class="slot" id="slot">
-      <div class="strip" id="strip">
-        <article class="frame"><div class="content"><div class="num">01</div><h2 class="ttl">Lidia</h2><div class="amp">&amp;</div><h2 class="ttl">Jorge</h2><div class="divider"></div><p class="sub">26·09·2026</p></div></article>
-        <article class="frame"><div class="content"><div class="num">02</div><h3 class="ttl">Nuestra historia</h3><div class="divider"></div><p class="sub">Dos corazones, un camino. Desde que nos conocimos supimos que la historia acababa de empezar. Ahora queremos compartir el siguiente capítulo con vosotros.</p></div></article>
-        <article class="frame"><div class="content"><div class="num">03</div><h3 class="ttl">Detalles</h3><div class="divider"></div><div class="label">Ceremonia</div><div class="detail">17:00 · —</div><div class="label">Cena</div><div class="detail">20:00 · —</div><div class="label">Fiesta</div><div class="detail">23:30 · —</div></div></article>
-        <article class="frame"><div class="content"><div class="num">04</div><h3 class="ttl">Confirmación</h3><div class="divider"></div><p class="sub">Confirma tu asistencia antes del 26/08/2026<br><br>Contacto: wedding@frutosmorin.com<br>+34 600 000 000</p></div></article>
-      </div>
+    <div class="slot" id="slot"></div>
+
+    <!-- La tira va ABSOLUTA dentro del photobooth (nace del borde inferior) -->
+    <div class="strip" id="strip">
+      <article class="frame"><div class="content"><div class="num">01</div><h2 class="ttl">Lidia</h2><div class="amp">&amp;</div><h2 class="ttl">Jorge</h2><div class="divider"></div><p class="sub">26·09·2026</p></div></article>
+      <article class="frame"><div class="content"><div class="num">02</div><h3 class="ttl">Nuestra historia</h3><div class="divider"></div><p class="sub">Dos corazones, un camino. Desde que nos conocimos supimos que la historia acababa de empezar. Ahora queremos compartir el siguiente capítulo con vosotros.</p></div></article>
+      <article class="frame"><div class="content"><div class="num">03</div><h3 class="ttl">Detalles</h3><div class="divider"></div><div class="label">Ceremonia</div><div class="detail">17:00 · —</div><div class="label">Cena</div><div class="detail">20:00 · —</div><div class="label">Fiesta</div><div class="detail">23:30 · —</div></div></article>
+      <article class="frame"><div class="content"><div class="num">04</div><h3 class="ttl">Confirmación</h3><div class="divider"></div><p class="sub">Confirma tu asistencia antes del 26/08/2026<br><br>Contacto: wedding@frutosmorin.com<br>+34 600 000 000</p></div></article>
     </div>
   </section>
 
-  <!-- Dock: la tira queda aquí tras el slide -->
+  <!-- Dock: aquí se acopla la tira tras el slide -->
   <div id="dock"></div>
 
   <p class="footer">Jorge & Lidia — 26·09·2026</p>
@@ -153,14 +149,13 @@ body{
 document.addEventListener('DOMContentLoaded',()=>{
   const btn  = document.getElementById('btn');
   const strip= document.getElementById('strip');
-  const slot = document.getElementById('slot');
   const dock = document.getElementById('dock');
   let started=false, docked=false;
 
   btn.addEventListener('click',()=>{
     if(started) return; started=true;
 
-    // Asegurar arranque de animación
+    // asegurar arranque de animación
     strip.style.opacity='1';
     void strip.offsetWidth; // reflow
     strip.classList.add('is-sliding');
@@ -168,15 +163,16 @@ document.addEventListener('DOMContentLoaded',()=>{
     strip.addEventListener('animationend',()=>{
       if(docked) return; docked=true;
 
-      // Pasar a flujo normal (debajo y centrado)
+      // pasar a flujo normal (debajo y centrada)
       strip.classList.remove('is-sliding');
       strip.classList.add('is-docked');
       dock.insertAdjacentElement('afterbegin', strip);
       strip.style.marginLeft='auto';
       strip.style.marginRight='auto';
 
-      // Scroll al inicio de la tira (opcional)
-      const y = slot.getBoundingClientRect().top + window.scrollY;
+      // scroll suave al inicio de la tira
+      const photobooth = document.getElementById('photobooth');
+      const y = photobooth.getBoundingClientRect().bottom + window.scrollY - 12;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }, { once:true });
   });
@@ -184,3 +180,4 @@ document.addEventListener('DOMContentLoaded',()=>{
 </script>
 </body>
 </html>
+
