@@ -101,7 +101,7 @@ body{
   margin:14px 10px 18px;box-shadow:0 6px 24px rgba(0,0,0,.12);
 }
 .content{
-  min-height:clamp(240px,72svh,760px);
+  min-height:clamp(240px,68svh,760px);
   padding:clamp(18px,4vw,34px);
   display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;
   background:linear-gradient(135deg,#fafafa,#f0f0f0);
@@ -119,12 +119,20 @@ body{
 /* Ajustes móvil */
 @media (max-width:600px){
   :root{
-    --slide-out:120px; /* animación algo más corta en móvil */
-    --dock-gap:14px;   /* separación final levemente menor */
+    --slide-out:120px;
+    --dock-gap:12px;
   }
   .photobooth{ padding:18px 14px 14px }
   .red-btn{ width:86px; height:86px }
   .frame{ border-width:10px }
+
+  /* 👉 secciones más cuadradas */
+  .content{
+    min-height:clamp(260px, 50svh, 480px);
+    padding:clamp(16px,5vw,24px);
+  }
+  .ttl{ font-size:clamp(22px,6vw,30px); }
+  .sub{ font-size:clamp(14px,3.5vw,16px); }
 }
 </style>
 </head>
