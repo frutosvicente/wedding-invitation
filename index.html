@@ -10,7 +10,12 @@
   --ink:#2a2a2a; --gold:#d4af37;
   --btn:#e01919; --frame:#ffffff;
   --shadow:0 18px 60px rgba(0,0,0,.18);
-  --slide-out:150px; /* cuánto “asoma” antes de acoplar */
+
+  /* Distancia que “asoma” la tira durante la animación */
+  --slide-out:150px;
+
+  /* Separación final, fija y pequeña, bajo el photobooth */
+  --dock-gap:16px;
 }
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
@@ -27,7 +32,7 @@ body{
   background:linear-gradient(135deg,#ececec,#d2d2d2);
   border-radius:22px 22px 12px 12px;
   padding:24px 22px 18px;
-  position:relative; /* clave: ancla de la tira */
+  position:relative; /* referencia para la tira */
   box-shadow:var(--shadow);
   overflow:visible;
 }
@@ -86,7 +91,8 @@ body{
 .strip.is-docked{
   position:relative; left:auto; top:auto; transform:none; opacity:1; pointer-events:auto;
   width:min(760px,96vw);
-  margin: calc(var(--slide-out) - 30vw) auto 0;
+  margin: var(--dock-gap) auto 0;            /* ⇦ gap fijo y pequeño */
+  transition: margin-top .45s ease;          /* suaviza el “encaje” final */
 }
 
 /* Cada “foto” */
@@ -110,8 +116,12 @@ body{
 
 .footer{text-align:center;color:#9a9a9a;font:600 12px/1 Arial,sans-serif;letter-spacing:.22em;margin-top:40px}
 
+/* Ajustes móvil */
 @media (max-width:600px){
-  :root{ --slide-out: 120px; }
+  :root{
+    --slide-out:120px; /* animación algo más corta en móvil */
+    --dock-gap:12px;   /* separación final levemente menor */
+  }
   .photobooth{ padding:18px 14px 14px }
   .red-btn{ width:86px; height:86px }
   .frame{ border-width:10px }
@@ -147,32 +157,43 @@ body{
 
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
-  const btn  = document.getElementById('btn');
+  const pb   = document.getElementById('photobooth');
   const strip= document.getElementById('strip');
+  const btn  = document.getElementById('btn');
   const dock = document.getElementById('dock');
+
   let started=false, docked=false;
 
   btn.addEventListener('click',()=>{
-    if(started) return; started=true;
+    if(started) return; started = true;
 
-    // asegurar arranque de animación
+    // Arranca animación desde dentro de la ranura
     strip.style.opacity='1';
-    void strip.offsetWidth; // reflow
+    void strip.offsetWidth;         // reflow para asegurar animación
     strip.classList.add('is-sliding');
 
     strip.addEventListener('animationend',()=>{
-      if(docked) return; docked=true;
+      if(docked) return; docked = true;
 
-      // pasar a flujo normal (debajo y centrada)
+      // Pasa a flujo normal, centrada, con transición del gap
       strip.classList.remove('is-sliding');
       strip.classList.add('is-docked');
       dock.insertAdjacentElement('afterbegin', strip);
       strip.style.marginLeft='auto';
       strip.style.marginRight='auto';
 
-      // scroll suave al inicio de la tira
-      const photobooth = document.getElementById('photobooth');
-      const y = photobooth.getBoundingClientRect().bottom + window.scrollY - 12;
+      // 1) Partimos del mismo punto donde terminó la animación
+      strip.style.marginTop = 'var(--slide-out)';
+
+      // 2) En el siguiente frame, animamos hasta el gap final fijo
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(()=>{
+          strip.style.marginTop = 'var(--dock-gap)';
+        });
+      });
+
+      // (opcional) centrar viewport en el inicio de la tira
+      const y = pb.getBoundingClientRect().bottom + window.scrollY - parseInt(getComputedStyle(document.documentElement).getPropertyValue('--dock-gap')) || 0;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }, { once:true });
   });
