@@ -9,6 +9,7 @@
     --bg1:#ffffff; --bg2:#f6f6f6;
     --ink:#2a2a2a; --gold:#d4af37;
     --btn:#e01919; --frame:#ffffff;
+    --shadow: 0 18px 60px rgba(0,0,0,.18);
   }
   *{box-sizing:border-box}
   html,body{height:100%}
@@ -24,7 +25,8 @@
     width:min(560px,92vw);
     background:linear-gradient(135deg,#ececec,#d2d2d2);
     border-radius:22px 22px 12px 12px; padding:24px 22px 18px;
-    position:relative; box-shadow:0 18px 60px rgba(0,0,0,.18);
+    position:relative; box-shadow:var(--shadow);
+    overflow:visible; /* permite ver contenido que se “asome” */
   }
   .photobooth::before{
     content:""; position:absolute; top:10px; left:50%; transform:translateX(-50%);
@@ -52,21 +54,31 @@
     margin-top:116px; font:600 11px/1 Arial,sans-serif; letter-spacing:.22em; color:#6d6d6d;
   }
 
+  /* Ranura */
   .slot{
     width:min(420px,80%); height:22px; margin:0 auto; background:#121212;
     border-radius:0 0 12px 12px; box-shadow:inset 0 4px 10px rgba(0,0,0,.65);
-    position:relative; overflow:hidden;
+    position:relative; overflow:hidden; /* estado normal */
   }
+  .slot.releasing{ overflow:visible; } /* durante el slide se ve la tira fuera */
 
   /* Tira de fotos */
   .strip{
     position:absolute; left:50%; transform:translate(-50%,-100%); /* oculta arriba */
     width:min(380px,72vw); background:var(--frame); border-radius:8px; padding:18px 14px;
-    box-shadow:0 18px 60px rgba(0,0,0,.18); opacity:0; transition:opacity .3s;
-    pointer-events:none; z-index:2;
+    box-shadow:var(--shadow); opacity:0; transition:opacity .3s;
+    pointer-events:none; z-index:20;
   }
-  @keyframes slideOut{ from{transform:translate(-50%,-100%)} to{transform:translate(-50%,8px)} }
-  @keyframes growToFull{ from{transform:translate(-50%,8px)} to{transform:translate(-50%,0)} }
+
+  /* Sale más (160px) para que se vea bien antes de expandir */
+  @keyframes slideOut{
+    0%   { transform:translate(-50%,-100%); }
+    100% { transform:translate(-50%,160px); }
+  }
+  @keyframes growToFull{
+    0%   { transform:translate(-50%,160px); }
+    100% { transform:translate(-50%,0); }
+  }
 
   .strip.is-sliding{
     opacity:1; animation:slideOut 2.2s cubic-bezier(.22,.82,.27,1) forwards;
@@ -88,6 +100,7 @@
     padding: clamp(18px,4vw,34px);
     display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center;
     background:linear-gradient(135deg,#fafafa,#f0f0f0);
+    will-change: transform, opacity;
   }
   .num{ font:600 12px/1 Arial,sans-serif; letter-spacing:.32em; color:var(--gold); margin-bottom:12px }
   .ttl{ font-size:clamp(26px,4.2vw,40px); margin:0 0 6px }
@@ -104,7 +117,7 @@
 
   @media (prefers-reduced-motion: reduce){
     .strip{ transition:none; animation:none !important; opacity:1 }
-    .strip.is-sliding{ transform:translate(-50%,8px) !important }
+    .strip.is-sliding{ transform:translate(-50%,160px) !important }
     .strip.is-expanding{ animation:none !important }
   }
   @media (max-width:600px){
@@ -117,7 +130,7 @@
 </head>
 <body>
   <div class="wrap">
-    <section class="photobooth">
+    <section class="photobooth" id="photobooth">
       <div class="screen">
         <p class="t1" id="s1">LISTO PARA CAPTURAR</p>
         <p class="t2" id="s2">Pulsa el botón para comenzar</p>
@@ -125,15 +138,15 @@
       <div class="button-zone">
         <button class="red-btn" id="btn" aria-label="Mostrar invitación"></button>
       </div>
-      <div class="slot">
+      <div class="slot" id="slot">
         <div class="strip" id="strip" aria-live="polite">
           <!-- Foto 1 -->
           <article class="frame">
             <div class="content" data-parallax>
               <div class="num">01</div>
-              <h2 class="ttl" id="bride">Sofía</h2>
+              <h2 class="ttl" id="bride">Lidia</h2>
               <div class="amp">&amp;</div>
-              <h2 class="ttl" id="groom">Miguel</h2>
+              <h2 class="ttl" id="groom">Jorge</h2>
               <div class="divider"></div>
               <p class="sub" id="date">26·09·2026</p>
             </div>
@@ -187,10 +200,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const $ = (id) => document.getElementById(id);
   const btn   = $('btn');
   const strip = $('strip');
+  const slot  = $('slot');
   const s1    = $('s1');
   const s2    = $('s2');
 
-  if(!btn || !strip){ console.error('[PB] Falta #btn o #strip'); return; }
+  if(!btn || !strip || !slot){ console.error('[PB] Falta #btn/#strip/#slot'); return; }
 
   // Asegura que el botón no queda tapado
   btn.style.zIndex = '10';
@@ -202,7 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Timers de seguridad
   let slideTimeoutId = null;
   const SLIDE_MS = 2200;
-  const FORCE_EXPAND_MS = SLIDE_MS + 600;
+  const FORCE_EXPAND_MS = SLIDE_MS + 800;
 
   function expandNow(origin='fallback'){
     console.log(`[PB] expandNow (${origin})`);
@@ -213,6 +227,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function onSlideEnd(){
     clearTimeout(slideTimeoutId);
+    // al terminar el slide, ya no necesitamos que la ranura deje ver fuera
+    slot.classList.remove('releasing');
     setTimeout(() => expandNow('animationend'), 160);
   }
 
@@ -224,10 +240,13 @@ document.addEventListener('DOMContentLoaded', () => {
     s1.textContent = '¡COMPLETADO!';
     s2.textContent = 'Desplázate para ver la invitación';
 
+    // Durante el slide, la ranura permite ver la tira fuera
+    slot.classList.add('releasing');
+
     if (prefersReduced){
       strip.style.opacity = '1';
-      strip.style.transform = 'translate(-50%, 8px)';
-      requestAnimationFrame(() => expandNow('reduced-motion'));
+      strip.style.transform = 'translate(-50%,160px)';
+      requestAnimationFrame(() => onSlideEnd());
       return;
     }
 
@@ -242,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
     slideTimeoutId = setTimeout(() => {
       if (!strip.classList.contains('is-expanding')){
         console.warn('[PB] Forzando expansión por timeout');
-        expandNow('timeout');
+        onSlideEnd();
       }
     }, FORCE_EXPAND_MS);
   }, { passive:true });
@@ -268,10 +287,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   strip.addEventListener('scroll', onScroll, { passive:true });
 
-  // Textos rápidos (puedes editar aquí)
+  // Textos rápidos (edítalos si quieres)
   const config = {
-    bride: "Sofía",
-    groom: "Miguel",
+    bride: "Lidia",
+    groom: "Jorge",
     date: "26·09·2026",
     story: "Dos corazones, un camino. Desde que nos conocimos supimos que la historia acababa de empezar. Ahora queremos compartir el siguiente capítulo con vosotros.",
     ceremony: "17:00 · —",
