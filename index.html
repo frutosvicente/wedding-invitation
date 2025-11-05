@@ -21,7 +21,12 @@ body{
 }
 body.noscroll{ overflow:hidden; }
 
-.wrap{display:flex;flex-direction:column;align-items:center;padding:24px;gap:24px}
+/* Contenedor principal */
+.wrap{
+  display:flex; flex-direction:column;
+  align-items:stretch;              /* <- evita desalineados laterales */
+  padding:24px; gap:24px;
+}
 
 /* Máquina */
 .photobooth{
@@ -29,8 +34,8 @@ body.noscroll{ overflow:hidden; }
   background:linear-gradient(135deg,#ececec,#d2d2d2);
   border-radius:22px 22px 12px 12px;
   padding:24px 22px 18px;
-  position:relative;
-  box-shadow:var(--shadow);
+  position:relative; box-shadow:var(--shadow);
+  margin-left:auto; margin-right:auto;   /* <- centrada */
 }
 .photobooth::before{
   content:""; position:absolute; top:10px; left:50%; transform:translateX(-50%);
@@ -64,16 +69,15 @@ body.noscroll{ overflow:hidden; }
   box-shadow:inset 0 4px 10px rgba(0,0,0,.65);
 }
 
-/* Tira centrada */
+/* Tira centrada y en flujo normal */
 .strip{
   display:block;
-  width:min(760px,96vw);
-  margin:0 auto;
-  background:var(--frame);
-  border-radius:10px;
+  width:min(760px,100%);           /* <- sin vw: respeta el ancho interno */
+  margin:0 auto;                   /* <- centrado fiable */
+  background:var(--frame); border-radius:10px;
   box-shadow:var(--shadow);
   opacity:0;
-  transition: opacity .4s ease, margin-top .45s ease;
+  transition:opacity .4s ease, margin-top .45s ease;
 }
 .strip.is-docked{
   opacity:1;
@@ -98,7 +102,10 @@ body.noscroll{ overflow:hidden; }
 .divider{width:64px;height:2px;background:var(--gold);margin:12px auto 10px}
 .label{font:700 11px/1 Arial,sans-serif;text-transform:uppercase;letter-spacing:.24em;color:var(--gold);margin:10px 0 6px}
 .detail{font:400 16px/1.5 Arial,sans-serif;color:#555}
-.footer{text-align:center;color:#9a9a9a;font:600 12px/1 Arial,sans-serif;letter-spacing:.22em;margin-top:40px}
+.footer{
+  text-align:center;color:#9a9a9a;font:600 12px/1 Arial,sans-serif;letter-spacing:.22em;margin-top:40px;
+  margin-left:auto; margin-right:auto;   /* <- centrada */
+}
 
 /* Cuenta atrás */
 .countdown{
@@ -126,7 +133,7 @@ body.noscroll{ overflow:hidden; }
   opacity:0; z-index:1100;
 }
 .flash.play{
-  animation:flash .9s ease; /* flash más largo */
+  animation:flash 2s ease; /* flash más largo */
 }
 @keyframes flash{
   0%{ opacity:0 }
@@ -206,7 +213,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     countEl.textContent = n;
     countEl.style.animation = 'none';
     void countEl.offsetWidth;
-    countEl.style.animation = ''; 
+    countEl.style.animation = '';
 
     const tick = setInterval(()=>{
       n--;
