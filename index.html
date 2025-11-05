@@ -81,7 +81,7 @@ body.noscroll{overflow:hidden}
   box-shadow:inset 0 4px 10px rgba(0,0,0,.65);
 }
 
-/* Tira */
+/* Tira (oculta totalmente hasta después del flash) */
 .strip{
   display:block;
   width:min(760px,100%);
@@ -90,9 +90,14 @@ body.noscroll{overflow:hidden}
   border-radius:10px;
   box-shadow:var(--shadow);
   opacity:0;
+  visibility:hidden;            /* no visible */
+  height:0;                     /* no ocupa espacio */
+  overflow:hidden;              /* por si acaso */
   transition:opacity .4s ease, margin-top .45s ease;
 }
 .strip.is-docked{
+  visibility:visible;           /* se hace visible */
+  height:auto;                  /* ocupa su altura real */
   opacity:1;
   margin:var(--dock-gap) auto 0;
 }
@@ -156,7 +161,7 @@ body.noscroll{overflow:hidden}
   opacity:0; z-index:1100;
 }
 .flash.play{
-  animation:flash 2s ease;
+  animation:flash 2s ease; /* duración del flash */
 }
 @keyframes flash{
   0%{ opacity:0 }
@@ -224,7 +229,7 @@ document.addEventListener('DOMContentLoaded',()=>{
 
   function playFlash(){
     flashEl.classList.remove('play');
-    void flashEl.offsetWidth;
+    void flashEl.offsetWidth;           // reinicia animación
     flashEl.classList.add('play');
   }
 
@@ -248,22 +253,28 @@ document.addEventListener('DOMContentLoaded',()=>{
         countEl.style.animation = '';
       }else{
         clearInterval(tick);
+
+        // Oculta overlay de cuenta atrás y lanza flash
         overlay.classList.remove('visible');
         overlay.setAttribute('aria-hidden','true');
-        document.body.classList.remove('noscroll');
-
         playFlash();
 
-        s1.textContent = '¡COMPLETADO!';
-        s2.textContent = 'Desliza para ver la invitación';
+        // Solo cuando termine el flash, mostramos la tira
+        flashEl.addEventListener('animationend', ()=>{
+          document.body.classList.remove('noscroll');
 
-        strip.classList.add('is-docked');
-        strip.style.opacity = '1';
+          s1.textContent = '¡COMPLETADO!';
+          s2.textContent = 'Desliza para ver la invitación';
 
-        const pb = document.getElementById('photobooth');
-        const gap = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--dock-gap')) || 0;
-        const y = pb.getBoundingClientRect().bottom + window.scrollY - gap;
-        window.scrollTo({ top: y, behavior:'smooth' });
+          // Mostrar tira acoplada
+          strip.classList.add('is-docked');
+
+          // Centrar viewport justo bajo el photobooth
+          const pb = document.getElementById('photobooth');
+          const gap = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--dock-gap')) || 0;
+          const y = pb.getBoundingClientRect().bottom + window.scrollY - gap;
+          window.scrollTo({ top: y, behavior:'smooth' });
+        }, { once:true });
       }
     }, 1000);
   }
