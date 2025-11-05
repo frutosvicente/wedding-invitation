@@ -11,10 +11,10 @@
   --btn:#e01919; --frame:#ffffff;
   --shadow:0 18px 60px rgba(0,0,0,.18);
 
-  /* Distancia que “asoma” la tira durante la animación */
+  /* Distancia que “asomaría” si usaras slide (ya no se usa) */
   --slide-out:150px;
 
-  /* Separación final, fija y pequeña, bajo el photobooth */
+  /* Separación final fija bajo el photobooth */
   --dock-gap:16px;
 }
 *{box-sizing:border-box}
@@ -24,6 +24,8 @@ body{
   background:linear-gradient(to bottom,var(--bg1),var(--bg2));
   overflow-x:hidden;
 }
+body.noscroll{ overflow:hidden; }
+
 .wrap{display:flex;flex-direction:column;align-items:center;padding:24px;gap:24px}
 
 /* Máquina */
@@ -32,9 +34,8 @@ body{
   background:linear-gradient(135deg,#ececec,#d2d2d2);
   border-radius:22px 22px 12px 12px;
   padding:24px 22px 18px;
-  position:relative; /* referencia para la tira */
+  position:relative;
   box-shadow:var(--shadow);
-  overflow:visible;
 }
 .photobooth::before{
   content:""; position:absolute; top:10px; left:50%; transform:translateX(-50%);
@@ -68,31 +69,19 @@ body{
   box-shadow:inset 0 4px 10px rgba(0,0,0,.65);
 }
 
-/* Tira: ABSOLUTA respecto al photobooth, nace del borde inferior */
+/* Tira */
 .strip{
-  position:absolute; left:50%;
-  top:100%; /* anclada al borde inferior del photobooth */
-  transform:translate(-50%,-100%); /* empieza oculta “dentro” */
-  width:min(400px,78vw);
-  background:var(--frame); border-radius:8px;
-  padding:18px 14px; box-shadow:var(--shadow);
-  opacity:0; pointer-events:none; z-index:20;
-  will-change:transform,opacity;
-}
-
-/* Deslizamiento: de -100% (dentro) a +var(--slide-out) (fuera) */
-@keyframes slideOut{
-  0%  { transform:translate(-50%,-100%); opacity:1; }
-  100%{ transform:translate(-50%, var(--slide-out)); opacity:1; }
-}
-.strip.is-sliding{ animation:slideOut 2.2s cubic-bezier(.22,.82,.27,1) forwards }
-
-/* Tira acoplada debajo (flujo normal), centrada; scroll del body */
-.strip.is-docked{
-  position:relative; left:auto; top:auto; transform:none; opacity:1; pointer-events:auto;
   width:min(760px,96vw);
-  margin: var(--dock-gap) auto 0;            /* ⇦ gap fijo y pequeño */
-  transition: margin-top .45s ease;          /* suaviza el “encaje” final */
+  background:var(--frame); border-radius:10px;
+  box-shadow:var(--shadow);
+  opacity:0; /* oculta hasta que termine la cuenta atrás */
+  transition: opacity .4s ease, margin-top .45s ease;
+}
+
+/* Tira acoplada debajo (flujo normal) */
+.strip.is-docked{
+  opacity:1;
+  margin: var(--dock-gap) auto 0;
 }
 
 /* Cada “foto” */
@@ -116,6 +105,40 @@ body{
 
 .footer{text-align:center;color:#9a9a9a;font:600 12px/1 Arial,sans-serif;letter-spacing:.22em;margin-top:40px}
 
+/* Overlay de cuenta atrás */
+.countdown{
+  position:fixed; inset:0; display:none; place-items:center;
+  background:rgba(0,0,0,.55);
+  backdrop-filter: blur(2px);
+  z-index:1000;
+}
+.countdown.visible{ display:grid; }
+.count{
+  color:#fff; font-weight:700; letter-spacing:.06em;
+  font-size:min(24vw, 180px); line-height:1;
+  text-shadow:0 10px 40px rgba(0,0,0,.5);
+  animation:pop .8s ease forwards;
+}
+@keyframes pop{
+  0%{ transform:scale(.6); opacity:.5 }
+  60%{ transform:scale(1.08); opacity:1 }
+  100%{ transform:scale(1); opacity:1 }
+}
+
+/* Flash */
+.flash{
+  position:fixed; inset:0; background:#fff; pointer-events:none;
+  opacity:0; z-index:1100;
+}
+.flash.play{
+  animation:flash .45s ease;
+}
+@keyframes flash{
+  0%{ opacity:0 }
+  30%{ opacity:1 }
+  100%{ opacity:0 }
+}
+
 /* Ajustes móvil */
 @media (max-width:600px){
   :root{
@@ -125,8 +148,6 @@ body{
   .photobooth{ padding:18px 14px 14px }
   .red-btn{ width:86px; height:86px }
   .frame{ border-width:10px }
-
-  /* 👉 secciones más cuadradas */
   .content{
     min-height:clamp(260px, 50svh, 480px);
     padding:clamp(16px,5vw,24px);
@@ -140,70 +161,98 @@ body{
 <div class="wrap">
   <section class="photobooth" id="photobooth">
     <div class="screen">
-      <p class="t1">LISTO PARA CAPTURAR</p>
-      <p class="t2">Pulsa el botón para comenzar</p>
+      <p class="t1" id="s1">LISTO PARA CAPTURAR</p>
+      <p class="t2" id="s2">Pulsa el botón para comenzar</p>
     </div>
     <div class="button-zone">
       <button class="red-btn" id="btn" aria-label="Mostrar invitación"></button>
     </div>
-    <div class="slot" id="slot"></div>
-
-    <!-- La tira va ABSOLUTA dentro del photobooth (nace del borde inferior) -->
-    <div class="strip" id="strip">
-      <article class="frame"><div class="content"><div class="num">01</div><h2 class="ttl">Lidia</h2><div class="amp">&amp;</div><h2 class="ttl">Jorge</h2><div class="divider"></div><p class="sub">26·09·2026</p></div></article>
-      <article class="frame"><div class="content"><div class="num">02</div><h3 class="ttl">Nuestra historia</h3><div class="divider"></div><p class="sub">Dos corazones, un camino. Desde que nos conocimos supimos que la historia acababa de empezar. Ahora queremos compartir el siguiente capítulo con vosotros.</p></div></article>
-      <article class="frame"><div class="content"><div class="num">03</div><h3 class="ttl">Detalles</h3><div class="divider"></div><div class="label">Ceremonia</div><div class="detail">17:00 · —</div><div class="label">Cena</div><div class="detail">20:00 · —</div><div class="label">Fiesta</div><div class="detail">23:30 · —</div></div></article>
-      <article class="frame"><div class="content"><div class="num">04</div><h3 class="ttl">Confirmación</h3><div class="divider"></div><p class="sub">Confirma tu asistencia antes del 26/08/2026<br><br>Contacto: wedding@frutosmorin.com<br>+34 600 000 000</p></div></article>
-    </div>
+    <div class="slot"></div>
   </section>
 
-  <!-- Dock: aquí se acopla la tira tras el slide -->
-  <div id="dock"></div>
+  <!-- Tira (ya en flujo normal; la mostraremos al terminar la cuenta atrás) -->
+  <div class="strip" id="strip">
+    <article class="frame"><div class="content"><div class="num">01</div><h2 class="ttl">Lidia</h2><div class="amp">&amp;</div><h2 class="ttl">Jorge</h2><div class="divider"></div><p class="sub">26·09·2026</p></div></article>
+    <article class="frame"><div class="content"><div class="num">02</div><h3 class="ttl">Nuestra historia</h3><div class="divider"></div><p class="sub">Dos corazones, un camino. Desde que nos conocimos supimos que la historia acababa de empezar. Ahora queremos compartir el siguiente capítulo con vosotros.</p></div></article>
+    <article class="frame"><div class="content"><div class="num">03</div><h3 class="ttl">Detalles</h3><div class="divider"></div><div class="label">Ceremonia</div><div class="detail">17:00 · —</div><div class="label">Cena</div><div class="detail">20:00 · —</div><div class="label">Fiesta</div><div class="detail">23:30 · —</div></div></article>
+    <article class="frame"><div class="content"><div class="num">04</div><h3 class="ttl">Confirmación</h3><div class="divider"></div><p class="sub">Confirma tu asistencia antes del 26/08/2026<br><br>Contacto: wedding@frutosmorin.com<br>+34 600 000 000</p></div></article>
+  </div>
 
   <p class="footer">Jorge & Lidia — 26·09·2026</p>
 </div>
 
+<!-- Overlay de cuenta atrás + capa de flash -->
+<div class="countdown" id="countdown" aria-hidden="true">
+  <div class="count" id="countnum">3</div>
+</div>
+<div class="flash" id="flash"></div>
+
 <script>
 document.addEventListener('DOMContentLoaded',()=>{
-  const pb   = document.getElementById('photobooth');
-  const strip= document.getElementById('strip');
   const btn  = document.getElementById('btn');
-  const dock = document.getElementById('dock');
+  const strip= document.getElementById('strip');
+  const s1   = document.getElementById('s1');
+  const s2   = document.getElementById('s2');
+  const overlay = document.getElementById('countdown');
+  const countEl = document.getElementById('countnum');
+  const flashEl = document.getElementById('flash');
 
-  let started=false, docked=false;
+  let started=false;
 
-  btn.addEventListener('click',()=>{
+  function playFlash(){
+    flashEl.classList.remove('play');
+    // reflow para reiniciar animación
+    void flashEl.offsetWidth;
+    flashEl.classList.add('play');
+  }
+
+  function startCountdown(){
+    document.body.classList.add('noscroll');
+    overlay.classList.add('visible');
+    overlay.setAttribute('aria-hidden','false');
+
+    let n = 3;
+    countEl.textContent = n;
+    countEl.style.animation = 'none';
+    void countEl.offsetWidth;
+    countEl.style.animation = ''; // dispara @keyframes pop
+
+    const tick = setInterval(()=>{
+      n--;
+      if(n>0){
+        countEl.textContent = n;
+        countEl.style.animation = 'none';
+        void countEl.offsetWidth;
+        countEl.style.animation = '';
+      }else{
+        clearInterval(tick);
+        // flash y mostrar la tira ya acoplada
+        overlay.classList.remove('visible');
+        overlay.setAttribute('aria-hidden','true');
+        document.body.classList.remove('noscroll');
+
+        playFlash();
+
+        // Actualiza textos de la pantalla
+        s1.textContent = '¡COMPLETADO!';
+        s2.textContent = 'Desliza para ver la invitación';
+
+        // Mostrar tira en estado “docked”
+        strip.classList.add('is-docked');
+        strip.style.opacity = '1';
+
+        // Centra el viewport justo bajo el photobooth
+        const pb = document.getElementById('photobooth');
+        const gap = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--dock-gap')) || 0;
+        const y = pb.getBoundingClientRect().bottom + window.scrollY - gap;
+        window.scrollTo({ top: y, behavior:'smooth' });
+      }
+    }, 1000);
+  }
+
+  btn.addEventListener('click', ()=>{
     if(started) return; started = true;
-
-    // Arranca animación desde dentro de la ranura
-    strip.style.opacity='1';
-    void strip.offsetWidth;         // reflow para asegurar animación
-    strip.classList.add('is-sliding');
-
-    strip.addEventListener('animationend',()=>{
-      if(docked) return; docked = true;
-
-      // Pasa a flujo normal, centrada, con transición del gap
-      strip.classList.remove('is-sliding');
-      strip.classList.add('is-docked');
-      dock.insertAdjacentElement('afterbegin', strip);
-      strip.style.marginLeft='auto';
-      strip.style.marginRight='auto';
-
-      // 1) Partimos del mismo punto donde terminó la animación
-      strip.style.marginTop = 'var(--slide-out)';
-
-      // 2) En el siguiente frame, animamos hasta el gap final fijo
-      requestAnimationFrame(()=>{
-        requestAnimationFrame(()=>{
-          strip.style.marginTop = 'var(--dock-gap)';
-        });
-      });
-
-      // (opcional) centrar viewport en el inicio de la tira
-      const y = pb.getBoundingClientRect().bottom + window.scrollY - parseInt(getComputedStyle(document.documentElement).getPropertyValue('--dock-gap')) || 0;
-      window.scrollTo({ top: y, behavior: 'smooth' });
-    }, { once:true });
+    startCountdown();
   });
 });
 </script>
